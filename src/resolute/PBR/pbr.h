@@ -46,7 +46,7 @@ vec3 brdf(vec3 lightDir, vec3 viewDir, float roughness, vec3 normal, vec3 albedo
     vec3 F0 = reflectance;
     vec3 fresnelReflectance = F0 + (1.0 - F0) * pow(1.0 - VdotH, 5.0);
 
-    vec3 rhoD = albedo * (vec3(1.0) - fresnelReflectance) * (1.0 - metallic);
+    vec3 rhoD = albedo * (vec3_splat(1.0) - fresnelReflectance) * (1.0 - metallic);
 
     float k = alpha / 2.0;
     float geometry = (NdotL / (NdotL*(1.0-k)+k)) * (NdotV / (NdotV*(1.0-k)+k));

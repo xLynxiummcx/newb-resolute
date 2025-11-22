@@ -27,7 +27,7 @@ vec3 dodiffuseLight(
     float ambientOcclusion = skyLightSmooth * 0.8 + 0.75;
     vec3 dynamicAmbient = ambientColor;
     vec3 indirect = dynamicAmbient * ambientOcclusion;
-    return min(indirect + directLight, vec3(1.0));
+    return min(indirect + directLight, vec3_splat(1.0));
 }
 
 vec3 lightBlockCol(vec2 lm,float time, float ao,bool caves){
