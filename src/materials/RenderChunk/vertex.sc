@@ -2,20 +2,30 @@ $input a_color0, a_position, a_texcoord0, a_texcoord1
 #ifdef INSTANCING
   $input i_data0, i_data1, i_data2, i_data3
 #endif
-$output v_color0, v_color1, v_fog, v_refl, v_texcoord0, v_lightmapUV, v_extra
+$output v_color0, v_color1, v_fog, v_refl, v_texcoord0, v_lightmapUV, v_extra, v_position, v_wpos, v_ao, v_tree, v_godray, v_camdist, v_tocamPos, v_waterNormal, view, cameraDir, v_lava, v_positionRelative
 
 #include <bgfx_shader.sh>
 #include <newb/main.sh>
+#include <newb/config.h>
 
 uniform vec4 RenderChunkFogAlpha;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 FogColor;
-uniform vec4 DimensionID;
-uniform vec4 TimeOfDay;
-uniform vec4 Day;
+uniform vec4 GameCameraPos;
+uniform vec4 GameSunDir;
+uniform vec4 GameBiomeID;
+
+uniform vec4 GameTimeOfDay;
+uniform vec4 GameWeatherID;
+uniform vec4 GameDimension;
 
 SAMPLER2D_AUTOREG(s_MatTexture);
+
+
+//Lightmap fix
+#define a_texcoord1 vec2(fract(a_texcoord1.x*15.9375),floor(a_texcoord1.x*15.9375)*0.0625)
+
 
 void main() {
   #ifdef INSTANCING
@@ -58,11 +68,9 @@ void main() {
   vec3 bPos = fract(cPos);
   vec3 tiledCpos = fract(cPos*0.0625);
 
-  // 0-255 = first 4 bits for y, remaining for x
-  float uvx16 = a_texcoord1.x * 15.9375; // 255/16
-  vec2 uv1 = vec2(fract(uvx16), floor(uvx16)*0.0625); // (a&15, a>>4)
-
-  vec2 lit = uv1*uv1;
+   vec2 uv1 = a_texcoord1;
+  
+ vec2 lit = uv1*uv1;
 
   bool isColored = color.r != color.g || color.r != color.b;
   float shade = isColored ? color.g*1.5 : color.g;
@@ -74,7 +82,7 @@ void main() {
     bool isTree = false;
   #endif
 
-  nl_environment env = nlDetectEnvironment(DimensionID.x, TimeOfDay.x, Day.x, FogColor.rgb, FogAndDistanceControl.xyz);
+  nl_environment env = nlDetectEnvironment(FogColor.rgb, FogAndDistanceControl.xyz);
   nl_skycolor skycol = nlSkyColors(env, FogColor.rgb);
 
   // time
@@ -104,12 +112,13 @@ void main() {
   relativeDist += RenderChunkFogAlpha.x;
 
   vec4 fogColor;
+    vec3 sunDir = normalize(GameSunDir.xyz);
+ //sunDir = mix(sunDir,normalize(vec3(-0.5,0.2,0.0)),night * (1.0 - dawn) * (1.0 - dusk));
+  
   fogColor.rgb = nlRenderSky(skycol, env, viewDir, FogColor.rgb, t);
-  fogColor.a = nlRenderFogFade(relativeDist, FogColor.rgb, FogAndDistanceControl.xy);
-  #ifdef NL_GODRAY
-    fogColor.a = mix(fogColor.a, 1.0, min(NL_GODRAY*nlRenderGodRayIntensity(cPos, worldPos, t, uv1, relativeDist, FogColor.rgb), 1.0));
-  #endif
 
+    float godrays = mix(fogColor.a, 1.0, min(NL_GODRAY*nlRenderGodRayIntensity(cPos, worldPos, t, uv1, relativeDist, FogColor.rgb,sunDir), 1.0));
+v_godray = relativeDist;
   if (env.nether) {
     // blend fog with void color
     fogColor.rgb = colorCorrectionInv(FogColor.rgb);
@@ -124,19 +133,20 @@ void main() {
 
   float water = 0.0;
   vec4 refl = vec4(0.0,0.0,0.0,0.0);
+  
+  vec3 store = worldPos;
+  v_wpos = worldPos;
+  vec3 toCamPos = mul(model, vec4(GameCameraPos.xyz,1.0)).xyz;
+  v_tocamPos = toCamPos;
+  
   #if defined(TRANSPARENT) && !(defined(RENDER_AS_BILLBOARDS) || defined(SEASONS))
     color.a = mix(color.a, 1.0, 0.5*clamp(relativeDist, 0.0, 1.0));
     if (a_color0.b > 0.3 && a_color0.a < 0.95) {
       water = 1.0;
-      refl = nlWater(skycol, env, worldPos, color, a_color0, viewDir, light, cPos, tiledCpos, bPos.y, FogColor.rgb, lit, t, camDis, torchColor);
-    } else {
-      refl = nlRefl(skycol, env, color, lit, tiledCpos, camDis, worldPos, viewDir, torchColor, FogColor.rgb, FogAndDistanceControl.z, t);
-    }
-  #else
-    refl = nlRefl(skycol, env, color, lit, tiledCpos, camDis, worldPos, viewDir, torchColor, FogColor.rgb, FogAndDistanceControl.z, t);
+  }
   #endif
-
-  vec4 pos = mul(u_viewProj, vec4(worldPos, 1.0));
+       
+  vec4 pos = mul(u_viewProj, vec4(store, 1.0));
   #ifdef NL_RAIN_MIST_OPACITY
     if (env.rainFactor > 0.0) {
       float humidAir = env.rainFactor*lit.y*lit.y*nlWindblow(pos.xyz, t);
@@ -144,7 +154,11 @@ void main() {
     }
   #endif
 
-  if (env.underwater) {
+  bool blockUnderWater = (
+        uv1.y < 0.9 &&
+        abs((2.0 * a_position.y - 15.0) / 16.0 - uv1.y) < 0.00002);
+    
+ if (env.underwater || blockUnderWater) {
     nlUnderwaterLighting(light, pos.xyz, lit, uv1, tiledCpos, cPos, t, skycol.horizon);
   }
 
@@ -155,27 +169,61 @@ void main() {
   #else
     float shimmer = 1.0;
   #endif
-
-  #ifdef NL_LAVA_NOISE
+ 
+ 
+ /*   float lava = 0.0;
     bool isc = (a_color0.r+a_color0.g+a_color0.b) > 2.999;
     bool isb = bPos.y < 0.891 && bPos.y > 0.889;
     if (isc && isb && (uv1.x > 0.81 && uv1.x < 0.876) && a_texcoord0.y > 0.45) {
-      vec4 lava = nlLavaNoise(tiledCpos, t);
-      #ifdef NL_LAVA_NOISE_BUMP
-        worldPos.y += NL_LAVA_NOISE_BUMP*lava.a;
-      #endif
-      color.rgb *= lava.rgb;
+    lava = 1.0;
     }
-  #endif
+    
+  */
+  
+  float lava = 0.0;
+bool isc = (a_color0.r + a_color0.g + a_color0.b) > 2.999;
+bool isb = bPos.y < 0.891 && bPos.y > 0.889;
 
+if (isc && isb && (uv1.x > 0.81 && uv1.x < 0.876) && a_texcoord0.y > 0.45) {
+    lava = 1.0;
+}
+
+if (lava > 0.5) {
+    float waveSpeed = 0.7;
+    float waveScale = 3.5;
+
+    float wave = sin(worldPos.x * waveScale + t * waveSpeed)
+               + cos(worldPos.z * waveScale * 0.7 + t * (waveSpeed * 1.2));
+
+    worldPos.y += 0.02 * wave;
+}
+
+
+  
+float aoFactor = smoothstep(0.3, 0.4, a_color0.g);
+float ao = mix(0.5, 1.0, aoFactor);
+//ao = step(0.4,col_max);
+  
+  v_lava = lava;
+  v_waterNormal = vec3_splat(0.0);
   v_extra = vec4(shade, worldPos.y, water, shimmer);
   v_refl = refl;
   v_texcoord0 = a_texcoord0;
   v_lightmapUV = uv1;
   v_color0 = color;
   v_color1 = a_color0;
-  v_fog = fogColor;
-
+  v_fog = vec4(FogColor.rgb,fogColor.a);
+  v_position = a_position;
+  v_tree = float(isTree);
+  v_ao = ao;
+  v_camdist = camDis;
+  view = mul(u_viewProj, vec4(worldPos, 0.0)).xyz;
+  cameraDir = normalize(vec3(mul(u_viewProj, vec4(1.0, 0.0, 0.0, 0.0)).z, mul(u_viewProj, vec4(0.0, 1.0, 0.0, 0.0)).z, mul(u_viewProj, vec4(0.0, 0.0, 1.0, 0.0)).z));
+  v_positionRelative = mul(u_view,vec4(worldPos,1.0)).xyz;
+   
+   vec3 spos = a_position;
+    spos.xy = clamp(spos.xy, -0.5, 0.5);
+  
   #else
 
   vec4 pos = mul(u_viewProj, vec4(worldPos, 1.0));

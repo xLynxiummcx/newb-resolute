@@ -3,7 +3,7 @@
 
 #include "detection.h"
 #include "noise.h"
-
+#define rainy 0.0
 struct nl_skycolor {
   vec3 zenith;
   vec3 horizon;
@@ -18,7 +18,8 @@ vec3 spectrum(float x) {
 }
 
 vec3 getUnderwaterCol(vec3 FOG_COLOR) {
-  return 2.0*NL_UNDERWATER_TINT*FOG_COLOR*FOG_COLOR;
+    vec3 color = vec3(0.0,0.16,0.4);
+  return 2.0*color*FOG_COLOR*FOG_COLOR;
 }
 
 vec3 getEndZenithCol() {
@@ -289,5 +290,4 @@ nl_skycolor nlSkyColors(nl_environment env, vec3 FOG_COLOR) {
   }
   return s;
 }
-
 #endif

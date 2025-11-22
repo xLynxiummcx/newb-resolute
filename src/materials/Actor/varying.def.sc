@@ -18,3 +18,5 @@ vec4 v_fog : COLOR2;
 vec4 v_light : COLOR3;
 centroid vec2 v_texcoord0 : TEXCOORD0;
 vec4 v_edgemap : COLOR4;
+vec3 v_position : POSITION2;
+vec3 v_wpos :  WORLDPOSITION;

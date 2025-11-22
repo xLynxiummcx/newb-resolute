@@ -26,12 +26,14 @@
 
   Remember to rebuild the shader after making changes.
 */
-
+#define NOTDEBUG
+#define LIGHTMAPFIX
+#define SUNANGLE 45.0
 /* Color correction */
-#define NL_TONEMAP_TYPE 3              // 1:Exponential, 2:Reinhard, 3:Extended Reinhard, 4:ACES
-#define NL_GAMMA 1.33                  // 0.3 low ~ 2.0 high
-//#define NL_EXPOSURE 1.3              // [toggle] 0.5 dark ~ 3.0 bright
-//#define NL_SATURATION 1.4            // [toggle] 0.0 grayscale ~ 4.0 super saturated
+#define NL_TONEMAP_TYPE 5             // 1:Exponential, 2:Reinhard, 3:Extended Reinhard, 4:ACES
+#define NL_GAMMA 1.2                  // 0.3 low ~ 2.0 high
+#define NL_EXPOSURE 1.5              // [toggle] 0.5 dark ~ 3.0 bright
+#define NL_SATURATION 1.3           // [toggle] 0.0 grayscale ~ 4.0 super saturated
 //#define NL_TINT                      // [toggle] enable light/dark tone tinting
 #define NL_TINT_LOW  vec3(0.3,0.5,1.4) // color tint for dark tone
 #define NL_TINT_HIGH vec3(1.4,0.7,0.3) // color tint for light tone
@@ -64,7 +66,7 @@
 #define NL_FOG 1.0                // [toggle] 0.1 subtle ~ 1.0 blend with sky completely
 #define NL_MIST_DENSITY 0.18      // 0.0 no mist ~ 1.0 misty
 #define NL_RAIN_MIST_OPACITY 0.12 // [toggle] 0.04 very subtle ~ 0.5 thick rain mist blow
-#define NL_CLOUDY_FOG 0.1         // [toggle] 0.0 subtle - 0.8 dense fog clouds
+//#define NL_CLOUDY_FOG 0.0        // [toggle] 0.0 subtle - 0.8 dense fog clouds
 
 /* Sky colors - zenith=top, horizon=bottom */
 #define NL_DAY_ZENITH_COL    vec3(0.15,0.45,1.0)
@@ -91,8 +93,8 @@
 //#define NL_GLOW_LEAK 0.6        // [toggle] 0.08 subtle ~ 1.0 100% brightness of NL_GLOW_TEX
 
 /* Waving */
-#define NL_PLANTS_WAVE 0.05    // [toggle] 0.02 gentle ~ 0.4 violent
-#define NL_LANTERN_WAVE 0.16   // [toggle] 0.05 subtle ~ 0.4 large swing
+//#define NL_PLANTS_WAVE 0.05    // [toggle] 0.02 gentle ~ 0.4 violent
+//#define NL_LANTERN_WAVE 0.16   // [toggle] 0.05 subtle ~ 0.4 large swing
 #define NL_WAVE_SPEED 2.8      // 0.5 slow wave ~ 5.0 very fast wave
 //#define NL_EXTRA_PLANTS_WAVE // [toggle] !dont use! wave using texture coords (1.21.0 vanilla 2048x1024)
 #define NL_WAVE_RANGE 13.0     // 6.0 upto 6 blocks ~ 32.0 upto 32 blocks away (slower)
@@ -101,7 +103,7 @@
 #define NL_WATER_TRANSPARENCY 0.9 // 0.0 transparent ~ 1.0 normal
 #define NL_WATER_BUMP 0.09        // 0.001 plain ~ 0.2 bumpy water
 #define NL_WATER_WAVE_SPEED  0.8  // 0.2 calm ~ 2.0 turbulent
-#define NL_WATER_TEX_OPACITY 0.3  // 0.0 plain water ~ 1.0 vanilla water texture
+#define NL_WATER_TEX_OPACITY 0.9  // 0.0 plain water ~ 1.0 vanilla water texture
 #define NL_WATER_WAVE             // [toggle] wave effect
 #define NL_WATER_CLOUD_AURORA_REFLECTION // [toggle] simple clouds/aurora reflection
 //#define NL_WATER_REFL_MASK      // [toggle] fake water reflection mask
@@ -110,12 +112,12 @@
 /* Underwater */
 #define NL_UNDERWATER_BRIGHTNESS 0.8         // 0.0 dark ~ 3.0 bright
 #define NL_CAUSTIC_INTENSITY 1.9             // 0.5 weak ~ 5.0 bright
-#define NL_UNDERWATER_WAVE 0.1               // [toggle] 0.02 subtle ~ 0.6 trippy
+#define NL_UNDERWATER_WAVE 0.123               // [toggle] 0.02 subtle ~ 0.6 trippy
 #define NL_UNDERWATER_STREAKS 1.0            // [toggle] 0.8 subtle - 2.0 bright streaks from top
 #define NL_UNDERWATER_TINT vec3(0.9,1.0,0.9) // fog tint color when underwater
 
 /* Cloud type */
-#define NL_CLOUD_TYPE 1 // 0:vanilla, 1:soft, 2:rounded, 3:realistic
+#define NL_CLOUD_TYPE 3 // 0:vanilla, 1:soft, 2:rounded, 3:realistic
 
 /* Vanilla cloud settings - make sure to remove clouds.png when using this */
 #define NL_CLOUD0_THICKNESS 2.1      // 0.5 slim ~ 8.0 fat
@@ -182,7 +184,7 @@
 #define NL_SUNMOON_RAIN_VISIBILITY 0.5 // 0.0 invisible during rain ~ 1.0 always visible
 
 /* Fake godrays during sunrise/sunset */
-//#define NL_GODRAY 0.3 // [toggle] 0.1 subtle ~ 0.8 strong
+#define NL_GODRAY 1.5 // [toggle] 0.1 subtle ~ 0.8 strong
 
 /* Sky reflection */
 //#define NL_GROUND_REFL 0.4       // [toggle] 0.2 slightly reflective ~ 1.0 fully reflect sky
@@ -195,15 +197,36 @@
 #define NL_ENTITY_EDGE_HIGHLIGHT 0.41 // [toggle] 0.0 no highlight ~ 1.6 bright highlight
 
 /* Weather particles */
-#define NL_WEATHER_SPECK 0.6         // [toggle] 0.0 vanilla texture ~ 1.0 soft speck
-#define NL_WEATHER_RAIN_SLANT 4.0    // 1.0 minimal ~ 8.0 violent
-#define NL_WEATHER_PARTICLE_SIZE 1.0 // 0.5 tiny ~ 4.0 large
+#define NL_WEATHER_SPECK 0.0         // [toggle] 0.0 vanilla texture ~ 1.0 soft speck
+#define NL_WEATHER_RAIN_SLANT 2.0    // 1.0 minimal ~ 8.0 violent
+#define NL_WEATHER_PARTICLE_SIZE 0.8 // 0.5 tiny ~ 4.0 large
 
 /* Lava effects */
 #define NL_LAVA_NOISE            // [toggle] darken lava in certain regions
 //#define NL_LAVA_NOISE_BUMP 0.2 // [toggle] 0.1 subtle ~ 0.8 massive waves
 #define NL_LAVA_NOISE_SPEED 0.02 // 0.0 still ~ 0.1 fast
 
+#define WAVY_WATER
+#define SHOW_REFLECTIONS_ON_PUDDLES_ONLY
+#define NL_SUN_SIZE 0.5
+//#define PUDDLES
+#define REALISTIC_CAUSTICS
+#define ENABLE_PBR
+#define ENABLE_WATER
+//#define STYLIZED 
+//#define VANILLAVL
+//#define VORONOI
+#define FAST
+//#define ENABLE_CAUSTICS
+#define WAVE_COUNT 3
+#define FOG_HEIGHT 80.0
+//#define VANILLA_SUN
+#define SPECULAR_HIGHLIGHTS
+//#define SHOW_LIGHTNING
+#define CLOUDS_TYPE 3
+#define WATER_TYPE 1
+#define END_SKY_TYPE 2
+#define FOG_TYPE 1//1: simple ,2: layered
 /*
   NEWB SHADER SUBPACK CONFIG
   This part contains custom configuration options for each subpack.
@@ -216,48 +239,65 @@
   Build tool will enable corresponding flags when compiling.
 */
 
-#ifdef LITE
-  #define NO_WAVE
-  #undef NL_GLOW_SHIMMER
-  #undef NL_LAVA_NOISE
-  #undef NL_WEATHER_SPECK
-  #undef NL_SHOOTING_STAR
-  #undef NL_WATER_CLOUD_AURORA_REFLECTION
-  #undef NL_UNDERWATER_STREAKS
-  #undef NL_RAIN_MIST_OPACITY
-  #undef NL_CLOUDY_FOG
-  #undef NL_ENTITY_EDGE_HIGHLIGHT
+#ifdef VIBRANT
+#define SATURATION
 #endif
 
-#ifdef NO_WAVE_NO_FOG
-  #define NO_WAVE
-  #define NO_FOG
+#ifdef VANILLA
+#define VANILLA_SUN
+#undef SPECULAR_HIGHLIGHTS
+#define SATURATION
+#undef REALISTIC_CAUSTICS
 #endif
 
-#ifdef NO_FOG
-  #undef NL_FOG
+#ifdef VANILLA_VIBRANT
+#define VANILLA_SUN
+#undef SPECULAR_HIGHLIGHTS
 #endif
 
-#ifdef NO_WAVE
-  #undef NL_PLANTS_WAVE
-  #undef NL_LANTERN_WAVE
-  #undef NL_UNDERWATER_WAVE
-  #undef NL_WATER_WAVE
-  #undef NL_RAIN_MIST_OPACITY
+#ifdef VIBRANT_HIGH
+#undef WAVE_COUNT 3
+#undef WATER_TYPE 1
+
+#define WAVE_COUNT 10
+#define SATURATION
+#define WATER_TYPE 2
+#define CIRRUS_CLOUD_SHADOWS
+#define PUDDLES
 #endif
 
-#ifdef CHUNK_ANIM
-  #define NL_CHUNK_LOAD_ANIM 100.0
+#ifdef LEGACY_HIGH
+#undef WAVE_COUNT 3
+#undef WATER_TYPE 1
+
+#define WAVE_COUNT 10
+#define WATER_TYPE 2
+#define CIRRUS_CLOUD_SHADOWS
+#define PUDDLES
 #endif
 
-#ifdef ROUNDED_CLOUDS
-  #undef NL_CLOUD_TYPE
-  #define NL_CLOUD_TYPE 2
+#ifdef VIBRANT_ULTRA
+#undef WAVE_COUNT 3
+#undef WATER_TYPE 1
+
+#define WAVE_COUNT 10
+#define SATURATION
+#define WATER_TYPE 2
+#define VOLUMETRIC_CLOUDS
+#define PUDDLES
 #endif
 
-#ifdef BOX_CLOUDS
-  #undef NL_CLOUD_TYPE
-  #define NL_CLOUD_TYPE 0
+#ifdef LEGACY_ULTRA
+#undef WAVE_COUNT 3
+#undef WATER_TYPE 1
+
+#define WAVE_COUNT 10
+#define WATER_TYPE 2
+#define VOLUMETRIC_CLOUDS
+#define PUDDLES
 #endif
 
+#ifdef LIGHTNING
+#define SHOW_LIGHTNING
+#endif
 #endif

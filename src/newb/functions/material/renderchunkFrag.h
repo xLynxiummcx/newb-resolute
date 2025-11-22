@@ -1,0 +1,564 @@
+
+//RenderChunk/fragment.sc
+#if defined(DEPTH_ONLY_OPAQUE) || defined(DEPTH_ONLY) || defined(INSTANCING)
+    gl_FragColor = vec4_splat(1.0);
+    return;
+#endif
+ float time = ViewPositionAndTime.w;
+
+    vec3 cameraPos = GameCameraPos.xyz;
+    vec2 lm = v_lightmapUV;
+    float lm_y = lm.y;
+    float weather = GameWeatherID.x;
+    nl_environment env = nlDetectEnvironment(FogColor.rgb, FogAndDistanceControl.xyz);
+  
+    float clear = 1.0 - smoothstep(0.0, 0.5, weather);
+    float rain  = env.rainFactor;
+    float snow  = smoothstep(1.5, 2.0, weather);
+
+    vec3 whatWeather = getWeather(weather);
+    vec4 whatTime = timeofday(GameTimeOfDay.x);
+    float night = whatTime.x;
+    float day   = whatTime.w;
+    float dusk  = whatTime.z;
+    float dawn  = whatTime.y;
+
+    bool water = v_extra.b > 0.9;
+
+    vec3 sunDir = normalize(GameSunDir.xyz);
+         sunDir = mix(sunDir,normalize(vec3(-0.5,0.2,0.0)),night * (1.0 - dawn) * (1.0 - dusk));
+  
+    vec3 viewPos = normalize( - v_wpos);    // used across lighting
+    vec3 viewDir = normalize(v_wpos);   
+    float width = 0.88;
+   float shadows = smoothstep(0.9, 0.8, pow(v_lightmapUV.y, 2.0));
+
+    float sideshadow = smoothstep(0.64, 0.62, v_color1.g);
+    float sunVisibility = clamp(sunDir.y, 0.0, 1.0);
+    float moonVisibility = clamp(-sunDir.y, 0.0, 1.0);
+    float nolight = 1.0 - lm_y;
+    bool isCave = nolight>0.7;
+    vec2 texuv = v_texcoord0;
+    vec2 pos_xz = v_position.xz;
+  bool nether= env.nether;
+ 
+   vec3 N = normalize(cross(dFdx(v_position), dFdy(v_position)));
+    vec3 flatN = N;
+    mat3 tbn = getTBN(N,v_texcoord0,v_position);
+        N = mix(normalize(mul(tbn, getNormal(s_MatTexture, v_texcoord0))),N,v_extra.b);
+
+    vec4 diffuse = texture2D(s_MatTexture,texuv);
+#if !defined(ALPHA_TEST)
+    if (rain > 0.001 && !env.underwater && !nether) {
+        float numFrames = 60.0;
+        float frameIndex = mod(floor(ViewPositionAndTime.w * 12.0), numFrames);
+        float frameHeight = 1.0 / numFrames;
+        vec2 rippleUV = vec2(pos_xz.x * 0.5, pos_xz.y * 0.5 * frameHeight + frameIndex * frameHeight);
+        vec3 ripple = texture2D(s_Ripples, rippleUV).rgb;
+        vec2 distortion = (ripple.xy - 0.5) * 0.08;
+        vec2 distortedUV = texuv + (distortion * 0.125) * (1.0 - shadows);
+         vec4 noRainDiffuse = diffuse;
+        vec4 rainDiffuse = texture2D(s_MatTexture, distortedUV);
+        
+        diffuse = mix(diffuse, rainDiffuse, rain);
+        diffuse = mix(diffuse,noRainDiffuse,nolight);
+    }
+#endif
+
+  
+  float endDist = FogAndDistanceControl.z*0.6;
+    bool doEffect = (v_camdist < endDist);
+  
+  
+    float alpha = diffuse.a;
+
+bool isNonMetal = false;
+bool isMetal = false;
+
+#if !defined(SEASONS) && !(defined(ALPHA_TEST) || defined(OPAQUE))
+isMetal = abs(alpha - 0.7) < 0.02;     // 0.68–0.72
+isNonMetal = abs(alpha - 0.8) < 0.02;  // 0.78–0.82
+#endif
+
+vec4 color = v_color0;
+    vec4 vertexcol = v_color1;
+    float renderdistance = FogAndDistanceControl.z;
+   
+    vec3 waterPosition = cameraPos + v_wpos;
+    
+#ifdef ALPHA_TEST
+    if (diffuse.a < 0.5) {
+        discard;
+    }
+#endif
+
+#if defined(SEASONS) && (defined(ALPHA_TEST) || defined(OPAQUE))
+    diffuse.rgb *= mix(vec3_splat(1.0), 2.0 * texture2D(s_SeasonsTexture, v_color1.xy).rgb, vertexcol.y);
+    diffuse.rgb *= vertexcol.aaa;
+#else
+    diffuse *= vertexcol;
+#endif
+
+    vec3 albedo = diffuse.rgb;
+    
+if(v_lava>0.9){
+float bloomThreshold = 0.2;
+float bloomStrength = 4.0;
+vec2 texelSize = vec2(1.0/texuv.x, 1.0/texuv.y);
+diffuse.rgb += bloomOptimized(s_MatTexture, texuv, texelSize, bloomThreshold) * bloomStrength;
+}
+
+      float jitter = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 rayOrigin = vec3(0.0, 6372.0e3, 0.0);
+float dither = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+   
+    vec3 sunColor;
+    vec3 scf;
+    vec3 zenithsky = mainSkyRender(viewDir, sunDir, day, night, rain, dusk, dawn, snow, sunColor,time);
+       vec3 ambientSky = mainSkyRender(normalize(vec3(0.0,1.0,0.0)), sunDir, day, night, rain, dusk, dawn, snow, scf,time);
+     vec3 storeSky = zenithsky;
+    
+    
+    if(nether){
+    storeSky  = vec3(0.75, 0.25, 0.1);
+    zenithsky = vec3(0.71, 0.23, 0.00)*1.2;
+    sunColor  = vec3(1.0, 0.45, 0.1); 
+    sunDir = normalize(vec3(0.3,1.0,0.3));
+    ambientSky = vec3(0.71, 0.23, 0.00)*1.2;
+    }else if(env.end){
+    zenithsky = vec3(0.01,0.01,0.01);
+    sunColor = vec3_splat(1.0);
+    storeSky = vec3_splat(0.0);
+    ambientSky = vec3_splat(0.2);
+    }
+    
+          
+    float ndotl = max(dot(N, sunDir), 0.0);
+
+    sunColor = mix(sunColor, vec3_splat(1.0), rain);
+    sunColor *=(1.0- shadows)* lm.y;
+    vec3 blockLight = lightBlockCol(lm, time,v_color1.g,isCave);
+  float finalAO = v_ao;
+vec3 ambient = vec3_splat(0.075) + 
+               (ambientSky*0.21)*finalAO;
+vec3 shadowTint = mix(vec3(0.9, 0.95, 1.0), vec3(1.0, 1.0, 0.98), finalAO);
+ambient *= shadowTint;
+               
+    vec3 diffuseLight =  dodiffuseLight(
+    N,
+    sunDir,
+    viewDir,
+    sunColor,
+    ambient,
+    0.0,
+    sunVisibility,
+    moonVisibility,
+    lm.y,
+    nolight
+);     
+    vec3 scattercol = vec3(0.5, 0.9, 0.4);
+
+    // caves / nolight
+    diffuse.rgb *= 1.0 - 0.8 * nolight;
+
+     vec3 specular = brdf_specular(sunDir, viewPos, N, 0.24, vec3_splat(0.02), sunColor);
+    float fastsss = hgPhase(dot(viewDir, sunDir), 0.76);
+    
+    vec3 lighting = diffuseLight + blockLight + specular;
+    
+    
+    int dimensionID = int(GameDimension.x);
+    bool isTheEnd = dimensionID == 2;
+
+    if (!isTheEnd && !env.end) {
+        diffuse.rgb *= lighting;
+   
+   diffuse.rgb *= 1.0 - 0.5 * night * lm_y;
+
+#if defined(TRANSPARENT) && !(defined(SEASONS) || defined(RENDER_AS_BILLBOARDS))
+    if (water) {
+      diffuse.rgb = vec3_splat(1.0 - NL_WATER_TEX_OPACITY*(1.0 - diffuse.b*1.8));
+}
+#endif
+if(nether){
+if(v_lava>0.9){
+   vec2 uv = waterPosition.xz;
+   float scale = 0.1;
+   float base = fractalTile(uv *scale);
+
+    float clouds = valueNoiseTile(uv * 0.05, 8.0);
+    clouds = smoothstep(0.1, 0.9, clouds);
+    float combined = base * (0.4+ 1.0* clouds);
+      
+    combined = pow(combined, 1.5);
+    float blur = (fractalTile(uv * scale) - fractalTile(uv * scale + 0.002));
+    float rim = smoothstep(0.01, 0.08, blur);
+    vec3 col = warmGradient(combined);
+   diffuse.rgb*= col * 3.0 * (combined);
+ 
+    }
+ //diffuse.rgb *=4.0;
+}
+}
+
+vec3 basewaterCol = vec3(0.12, 0.28, 0.55);
+bool blockUnderWater = (
+        v_lightmapUV.y < 0.9 &&
+        abs((2.0 * v_position.y - 15.0) / 16.0 - v_lightmapUV.y) < 0.00002
+    );
+  float depth = 1.0 - pow(lm.y,2.0);
+   vec3 absorption;
+   bool fromSurface = lm.y < 0.9 ;
+
+    vec3 absorptionCoeff = vec3(2.5, 1.8, 1.2); // Red, Green, Blue
+     absorption = exp(-depth * absorptionCoeff);
+   
+   if(water)
+    diffuse.rgb *= absorption;
+    
+   vec3 deepScatter = vec3(0.1, 0.25, 0.5);   // Deep water color
+    vec3 surfaceScatter = vec3(0.3, 0.6, 0.9); // Surface highlights
+    
+    float deepScatterAmount = depth * 1.5;
+    deepScatterAmount = min(deepScatterAmount, 0.7);
+    
+    float surfaceScatterAmount = (1.0 - depth) * 0.4;
+    
+    vec3 totalScatter = deepScatter * deepScatterAmount + 
+                       surfaceScatter * surfaceScatterAmount;
+    
+float phase = 0.7 + (depth * 0.5);
+ totalScatter = totalScatter * phase * (1.0 - absorption);
+    vec3 underWaterCol = mix(vec3(0.1, 0.25, 0.5),vec3(0.3, 0.6, 0.9),1.0-lm.y);
+
+
+vec3 waterNormal; //out from water  
+if(!isNonMetal){
+ 
+
+diffuse.rgb = ApplyWaterEffect(
+    diffuse.rgb,
+    flatN,
+    viewDir,
+    viewPos,
+    v_position,
+    v_texcoord0,
+    sunDir,
+    FogColor.rgb,
+    rayOrigin,
+    day, night, rain, dusk, dawn, snow,
+    time, jitter, dither,
+    water,
+    s_MatTexture,
+    s_SunTex,
+    s_SSRTex,
+    s_NoiseVoxel,
+    waterPosition,
+    s_NoiseCausticsPuddles,
+    s_MoonTex,
+    v_texcoord0,
+    diffuse.rgb,
+    absorption,
+    depth,
+    waterNormal,
+    s_WaveOne,
+    s_WaveTwo,
+    s_WaveThree,
+    isCave
+);
+        }
+
+
+float metallic = 0.0;
+    if (isMetal){
+       metallic= 0.0;
+       }
+       
+vec3 F0 = mix(vec3_splat(0.04), albedo, metallic);
+float f0 = 0.0;
+float roughness;
+if(isMetal){
+roughness= 0.2;
+f0 = 0.56;
+}else{
+roughness = 0.4;
+f0 = 0.04;
+}
+float fresnel = fresnelSchlick(viewPos, N, f0);
+ 
+#if !defined(WAVY_WATER)
+if(water){
+float fogDensity = depth * 0.5;
+float visibility = exp(-fogDensity);
+diffuse.a *= 0.3 + (visibility * 0.5);
+}
+#else
+if(water){
+float fogDensity = depth * 0.5;
+float visibility = exp(-fogDensity);
+diffuse.a *= 0.4 + (visibility * 0.5);
+}
+#endif
+
+    vec3 fogColor = storeSky;   
+   vec3 whichdirection = viewPos;
+   
+diffuse.rgb = ApplyPBRLighting(
+    diffuse.rgba,
+    albedo,
+    viewDir,
+    viewPos,
+    N,
+    sunDir,
+    sunColor,
+    storeSky,
+    diffuseLight,
+    roughness,
+    F0,
+    fresnel,
+    time,
+    dither,
+    night,
+    dawn,
+    rain,
+    jitter,
+    isMetal,
+    isNonMetal,
+    doEffect,
+    s_SunTex,
+    s_NoiseVoxel
+);
+
+
+if (env.end) {
+    diffuse.rgb = texture2D(s_MatTexture, v_texcoord0).rgb;
+    //diffuse.rgb *= texture2D(s_LightMapTexture, lm).rgb;
+    
+    F0 = vec3_splat(0.04);
+   // albedo *= 1.0 - F0;
+ albedo = diffuse.rgb;
+   
+#if END_SKY_TYPE == 1
+    float t = time;
+    vec3 rd = viewDir;
+    vec3 ro = GameCameraPos.xyz;
+    
+    vec3 cloudCenter = vec3(0.0, CLOUD_CENTER_HEIGHT, 0.0);
+    
+    vec3 skyDark = vec3(0.08, 0.10, 0.13);
+    vec3 skyMid = vec3(0.15, 0.18, 0.22);
+    vec3 cloudDark = vec3(0.12, 0.13, 0.15);
+    vec3 cloudMid = vec3(0.25, 0.28, 0.32);
+    vec3 cloudLight = vec3(0.45, 0.50, 0.55);
+
+    float g = abs(rd.y);
+    vec3 skyColor = mix(skyDark, skyMid, pow(g, 2.0));
+    skyColor += vec3(0.08, 0.10, 0.12) * pow(max(rd.y, 0.0), 4.0);
+
+    LightningBolt lights[2];
+    getLightning(t, lights);
+    lights[0].pos = cloudCenter + lights[0].pos * CLOUD_SCALE;
+    lights[1].pos = cloudCenter + lights[1].pos * CLOUD_SCALE;
+
+    vec3 LDir = vec3_splat(0.0);
+    vec3 LDir2 = vec3_splat(0.0);
+    vec3 terrainLightContrib = vec3_splat(0.0);
+
+    float transmittance = 1.0;
+    vec3 scatteredLight = vec3_splat(0.0);
+    float totalDensity = 0.0;
+    
+    float terrainDist = length(v_wpos.xyz - ro);
+    float distanceFog = exp(-terrainDist * 0.008); // Adjust fog density here
+    
+    float marchStart = 0.0;
+    float marchStepSize = MARCH_SIZE * CLOUD_SCALE;
+
+    for(int i = 0; i < MARCH_STEPS; i++) {
+        if(transmittance < 0.02) break;
+
+        float fi = float(i);
+        vec3 worldPos = ro + rd * (marchStart + fi * marchStepSize);
+        
+        vec3 localPos = (worldPos - cloudCenter) / CLOUD_SCALE;
+
+        if(localPos.y < -0.5 || localPos.y > 3.0) continue;
+
+        float density = stormDensity(localPos, time);
+
+        if(density > 0.005) {
+            float heightGrad = smoothstep(-0.5, 2.5, localPos.y);
+            vec3 cloudColor = mix(cloudDark, cloudMid, heightGrad);
+
+            float thickness = pow(density, 1.2);
+            cloudColor = mix(cloudColor, cloudLight, thickness * 0.3);
+
+            LightningBolt localLights[2];
+            localLights[0].pos = (lights[0].pos - cloudCenter) / CLOUD_SCALE;
+            localLights[0].intensity = lights[0].intensity;
+            localLights[1].pos = (lights[1].pos - cloudCenter) / CLOUD_SCALE;
+            localLights[1].intensity = lights[1].intensity;
+            
+            vec3 lightContrib = volumetricLight(localPos, rd, localLights[0], density, time, LDir);
+            lightContrib += volumetricLight(localPos, rd, localLights[1], density, time, LDir2);
+
+            vec3 volumeColor = cloudColor + lightContrib;
+
+            float stepTransmittance = exp(-density * CLOUD_ABSORPTION * MARCH_SIZE);
+            float absorption = (1.0 - stepTransmittance);
+
+            scatteredLight += transmittance * volumeColor * absorption;
+            transmittance *= stepTransmittance;
+
+            totalDensity += density;
+        }
+    }
+
+    vec3 terrainPos = v_wpos.xyz;
+    vec3 terrainNormal = N;
+    vec3 toLight1 = lights[0].pos - terrainPos;
+    float dist1 = length(toLight1);
+    LDir = normalize(toLight1);
+    float lightAtten1 = lights[0].intensity / (1.0 + dist1 * dist1 * 0.01);
+    lightAtten1 *= exp(-dist1 * 0.05);    float NdotL1 = max(dot(terrainNormal, LDir), 0.0);
+    
+    vec3 toLight2 = lights[1].pos - terrainPos;
+    float dist2 = length(toLight2);
+    LDir2 = normalize(toLight2);
+    float lightAtten2 = lights[1].intensity / (1.0 + dist2 * dist2 * 0.01);
+    lightAtten2 *= exp(-dist2 * 0.05);
+    float NdotL2 = max(dot(terrainNormal, LDir2), 0.0);
+    
+    vec3 lightningColor = vec3(0.7, 0.85, 1.0);
+    terrainLightContrib = lightningColor * (lightAtten1 * NdotL1 + lightAtten2 * NdotL2);
+    
+    float cloudShadow = mix(0.3, 1.0, transmittance); // Darker under thick clouds
+    terrainLightContrib *= cloudShadow;
+
+    vec3 finalColor = skyColor * transmittance + scatteredLight;
+
+    float totalFlash = lights[0].intensity + lights[1].intensity;
+    if(totalFlash > 0.01) {
+        finalColor += vec3(0.6, 0.7, 0.9) * totalFlash * 0.08 * transmittance;
+    }
+    
+    finalColor = pow(finalColor, vec3(0.85));
+    finalColor = max(finalColor - 0.02, 0.0) * 1.05;
+    
+    diffuse.rgb *= terrainLightContrib;
+    float fogFactor = 1.0 - transmittance;
+    
+    float finalFog = max(fogFactor, 1.0 - distanceFog);
+    diffuse.rgb = mix(diffuse.rgb, finalColor, finalFog);
+    #elif END_SKY_TYPE == 2
+    vec3 L = normalize(vec3(-4.0, -1.0, -1.5));
+    float diff = max(dot(N,L),0.0);
+    
+    vec3 diffuseLight = vec3_splat(1.0) * diff + vec3_splat(0.18);
+    specular = brdf_specular(L, viewPos, N, 0.2, vec3_splat(0.02), vec3_splat(1.0));
+  
+    vec3 lightBlock = vec3(1.0,0.9,0.9) * lm.x * lm.x *lm.x *lm.x;
+    
+    diffuse.rgb *= diffuseLight + lightBlock + specular;
+    #endif
+}
+
+#if defined(ENABLE_CAUSTICS)
+if(doEffect && !isCave){
+diffuse.rgb = ApplyCaustics(
+    diffuse.rgb,
+    N,
+    zenithsky,
+    pos_xz,
+    v_lightmapUV,
+    v_position,
+    time,
+    env.underwater,
+    nether,
+    s_NoiseCausticsPuddles,
+    viewDir,
+    underWaterCol
+);
+}
+#endif
+  if (env.underwater) {
+   vec3 watercol = mix(underWaterCol,vec3(0.02,0.1,0.3), night);
+   vec2 gduv = -viewDir.xz/viewDir.y*18.2;
+ float godrays = getGodRays(gduv,s_BlueNoise,time);
+ 
+        fogColor = watercol;
+        
+        float brightn = 2.3;
+              brightn += 0.3* dawn;
+              brightn += 0.5*dusk;
+              brightn+= 0.2 *night;
+              
+        diffuse.rgb *= brightn;
+        #if !defined(REALISTIC_CAUSTICS)
+        diffuse.rgb *= watercol;
+        #endif
+        
+    }
+
+if(!nether && !env.end){
+    if(rain>0.5 && !isCave){
+diffuse.rgb = ApplyPuddleEffect(
+    diffuse.rgb,
+    viewPos, viewDir, N,
+    sunDir, sunColor, FogColor.rgb,
+    waterPosition.xz, rain, snow, night, dawn,
+    time, dither, water, doEffect, env.underwater,
+    s_NoiseCausticsPuddles, s_SSRTex,s_NoiseVoxel,waterPosition
+);}
+   }
+#if defined(SHOW_LIGHTNING)
+if(!env.underwater && !isCave){
+float flash = lightningFlash(time);
+vec3 flashColor = vec3(1.0, 1.0, 0.9); // pale yellow-white
+float upMask = smoothstep(0.2, 1.0, N.y);
+float flicker = fract(sin(dot(vec2(time*60.0, flash*100.0), vec2(12.9898,78.233))) * 43758.5453);
+flash *= (0.8 + 0.4 * flicker);
+vec3 flashLight = flashColor * flash * 3.0; // intensity multiplier
+
+diffuse.rgb *= 1.0 - 0.5 * rain;
+diffuse.rgb += (flashLight * upMask)*rain;
+}
+#endif
+
+#if defined(SHOW_SUNBEAMS)
+if(cameraPos.y >= 60.0){
+//float heightmask = smoothstep(60.0,80.0,cameraPos.y);
+vec3 wpos = v_wpos;
+float sunMask = smoothstep(0.2, 0.8, clamp(dot(normalize(wpos), sunDir), 0.0, 1.0));
+vec3 beam = fbm(vec2(time*0.3+wpos.z/wpos.y))*sunColor;
+vec3 sunbeam = mix(vec3_splat(0.0), beam, clamp(length(wpos)/16.0*1.7,0.0,1.0));
+diffuse.rgb += ((sunbeam*0.65)*sunMask);
+}
+#endif
+
+#if FOG_TYPE == 1
+float fogalpha = getLayeredFog(v_wpos,cameraPos,vec2(80.0,60.0),FogAndDistanceControl.xy,v_godray);
+
+#elif FOG_TYPE == 2//broken 
+float fogalpha = CalcLayeredFogFactor(
+        cameraPos,     // Camera position
+        v_wpos,      // Fragment world position
+        60.0,        // Fog layer height
+        max(70.0+100.0*rain,0.0)         // Max fog distance
+    );
+#endif
+    
+    if(env.underwater){
+        fogalpha= smoothstep(FogAndDistanceControl.x*0.6,FogAndDistanceControl.y,v_godray);
+        }
+        
+   diffuse.rgb = mix(diffuse.rgb,fogColor,fogalpha*0.4);
+if(nether){
+    diffuse.rgb = colorCorrectionInv(diffuse.rgb);
+    }else{
+    diffuse.rgb =  colorCorrection(diffuse.rgb,rain);
+       }
+       
+    gl_FragColor = diffuse;
+
+//endif

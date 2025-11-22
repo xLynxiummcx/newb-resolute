@@ -1,0 +1,15 @@
+{
+  "name": "StoreFrame",
+  "reg1": 5,
+  "reg2": 5,
+  "type": "texture2D",
+  "precision": "lowp",
+  "access": "writeonly",
+  "texture_format": "rgba8",
+  "default_texture": "",
+  "unordered_access": false,
+  "always_one": 1,
+  "texture_path": "textures/lynx/newnoise-(1)",
+  "sampler_state": {},
+  "custom_type_info": {}
+}

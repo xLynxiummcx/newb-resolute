@@ -3,7 +3,7 @@ $input a_position, a_color0, a_texcoord0, a_indices, a_normal
   $input i_data0, i_data1, i_data2
 #endif
 
-$output v_color0, v_fog, v_light, v_texcoord0, v_edgemap
+$output v_color0, v_fog, v_light, v_texcoord0, v_edgemap, v_position, v_wpos
 
 #include <bgfx_shader.sh>
 #include <MinecraftRenderer.Materials/DynamicUtil.dragonh>
@@ -17,9 +17,6 @@ uniform vec4 FogControl;
 uniform vec4 UVAnimation;
 uniform mat4 Bones[8];
 uniform vec4 ViewPositionAndTime;
-uniform vec4 DimensionID;
-uniform vec4 TimeOfDay;
-uniform vec4 Day;
 
 void main() {
   mat4 World = u_model[0];
@@ -40,7 +37,8 @@ void main() {
   vec4 position = jitterVertexPosition(worldPosition);
 
   #if !(defined(DEPTH_ONLY_OPAQUE) || defined(DEPTH_ONLY) || defined(INSTANCING))
-    nl_environment env = nlDetectEnvironment(DimensionID.x, TimeOfDay.x, Day.x, FogColor.rgb, FogControl.xyz);
+
+    nl_environment env = nlDetectEnvironment(FogColor.rgb, FogControl.xyz);
     nl_skycolor skycol = nlSkyColors(env, FogColor.rgb);
 
     float relativeDist = position.z/FogControl.z;
@@ -61,7 +59,9 @@ void main() {
 
     v_texcoord0 = texcoord0;
     v_color0 = a_color0;
-    v_fog = fogColor;
+    v_fog = FogColor;
+    v_position = a_position;
+    v_wpos = worldPosition;
     #ifdef NL_ENTITY_EDGE_HIGHLIGHT
       v_edgemap = nlEntityEdgeHighlightPreprocess(texcoord0);
     #else

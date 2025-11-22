@@ -1,16 +1,17 @@
-name = "Newb X Legacy"
-version = [0, 16, 0]
-min_supported_mc_version = [1, 21, 111]
+name = "Newb RESOLUTE beta 3"
+version = [0, 0, 0]
+min_supported_mc_version = [1, 21, 20]
 description = '''
 §c%w
-§7- An enchanced vanilla shader for Minecraft!
+§7- Trying to get best visuals on a Limited Engine , BETA 2
 %v
 §3https://devendrn.github.io/newb-shader/
 ''' # %w = patch warning, %v = version
-authors = ["devendrn"]
+authors = ["devendrn","micheallynx"]
 url = "https://devendrn.github.io/newb-shader/"
-uuid = "95f774cf-4afa-73e7-a21a-72146307b1d2" # Use https://www.uuidgenerator.net/version4
-materials = ["Sky", "RenderChunk", "Actor", "ActorGlint", "EndSky", "Clouds", "SunMoon", "Weather", "ItemInHandTextured", "ItemInHandColor", "ItemInHandColorGlint", "Stars"]
+uuid = "b4a3a0f4-5d2e-4a8c-b97f-2b0b8df8a63c" # Use https://www.uuidgenerator.net/version4
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
+#materials = ["Weather","Sky","Clouds","SunMoon","Stars"]
 
 [info] 
 copyright = '''
@@ -29,57 +30,66 @@ credits = '''
 # right-most subpack is enabled by default
 
 [[subpack]]
-define = "ROUNDED_CLOUDS"
-materials = ["Clouds"]
+define = "LIGHTNING"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-Rounded Clouds
+LIGHTNING\n\n\n adds shader side lightning\nImpact:Medium 
 '''
 
 [[subpack]]
-define = "BOX_CLOUDS"
-materials = ["Clouds", "RenderChunk"]
+define = "LEGACY_ULTRA"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-Box Clouds
+LEGACY ULTRA\n\n\n adds dynamic semi-volumetric clouds  and adds shader computed water and puddles\nImpact: very very HIGH!!!
+'''
+
+
+[[subpack]]
+define = "VIBRANT_ULTRA"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
+description = '''
+VIBRANT ULTRA\n\n\n vibrant,adds dynamic semi-volumetric clouds and adds shader computed water and puddles\nImpact: very very HIGH!!!
 '''
 
 [[subpack]]
-define = "CHUNK_ANIM"
-materials = ["RenderChunk"]
+define = "LEGACY_HIGH"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-Chunk loading animation
+LEGACY HIGH\n\n\n adds dynamic lighting to cirrus clouds and adds shader computed water and puddles\nImpact:HIGH!
+'''
+
+
+[[subpack]]
+define = "VIBRANT_HIGH"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
+description = '''
+VIBRANT HIGH\n\n\n vibrant,adds dynamic lighting to cirrus clouds and adds shader computed water and puddles \nImpact:HIGH!
 '''
 
 [[subpack]]
-define = "NO_WAVE_NO_FOG"
-materials = ["RenderChunk"]
+define = "VANILLA_VIBRANT"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-No fog and wave effects
+VANILLA VIBRANT \n\n\n vanilla but vibrant \nImpact:LOW
 '''
 
 [[subpack]]
-define = "NO_FOG"
-materials = ["RenderChunk"]
+define = "VANILLA"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-No fog effect
+VANILLA\n\n\n brings back vanilla aesthetics\nImpact:LOW
 '''
 
 [[subpack]]
-define = "NO_WAVE"
-materials = ["RenderChunk"]
+define = "VIBRANT"
+materials = ["Weather","Sky","RenderChunk","SunMoon","Stars","EndSky"]
 description = '''
-No wave effects
+VIBRANT\n\n\n makes colors more vibrant\nImpact:LOW
 '''
-
-#[[subpack]]
-#define = "LITE"
-#materials = ["Sky", "RenderChunk", "Actor", "ActorGlint", "EndSky", "Clouds", "SunMoon", "Weather", "ItemInHandTextured", "ItemInHandColor", "ItemInHandColorGlint", "Stars"]
-#description = '''
-#Many effects disabled. A bit lighter!
-#'''
 
 [[subpack]]
 define = "DEFAULT"
 materials = []
 description = '''
-Default
+LEGACY
 '''

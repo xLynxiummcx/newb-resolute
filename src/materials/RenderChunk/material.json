@@ -1,1 +1,11 @@
-../../common/material.json
+{
+"uniform_overrides": {
+  "GameSunDir": "BUILTIN_MinecraftSunDirection",
+  "GameBiomeID":"BUILTIN_MinecraftBiomeID",
+  "GameCameraPos":"BUILTIN_MinecraftCameraPosition",
+  "GameWeatherID" : "BUILTIN_MinecraftWeatherID",
+  "GameTimeOfDay" : "BUILTIN_MinecraftTimeOfDay",
+  "GameCloudHeight" : "BUILTIN_MinecraftCloudHeight",
+  "GameDimension" : "BUILTIN_MinecraftDimensionID"
+}
+}

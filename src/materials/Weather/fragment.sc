@@ -5,6 +5,17 @@ $input v_fog, v_occlusionUVHeight, v_texcoord0, v_texcoord1
 
 uniform vec4 UVOffsetAndScale;
 uniform vec4 OcclusionHeightOffset;
+#include <resolute/includes.h>
+
+uniform vec4 ViewPositionAndTime;
+uniform vec4 FogColor;
+uniform vec4 FogAndDistanceControl;
+uniform vec4 GameSunDir;
+uniform vec4 GameBiomeID;
+uniform vec4 GameCameraPos;
+uniform vec4 GameTimeOfDay;
+uniform vec4 GameWeatherID;
+uniform vec4 GameDimension;
 
 SAMPLER2D_AUTOREG(s_LightingTexture);
 SAMPLER2D_AUTOREG(s_OcclusionTexture);
@@ -22,8 +33,14 @@ bool isOccluded(const vec2 occlUV, const float occlHeight, const float occlHeigh
     return occlUV.x >= 0.0 && occlUV.x <= 1.0 && occlUV.y >= 0.0 && occlUV.y <= 1.0 && isUnder;
   #endif
 }
-
 void main() {
+float weather = GameWeatherID.x;
+vec3 whatWeather = getWeather(weather);
+
+float rain = whatWeather.y,
+      clear = whatWeather.x,
+      snow = whatWeather.z;
+      
   vec4 diffuse = texture2D(s_WeatherTexture, v_texcoord0);
   vec4 occlLuminanceAndHeightThreshold = texture2D(s_OcclusionTexture, v_occlusionUVHeight.xy);
 
@@ -53,14 +70,22 @@ void main() {
   #endif 
 
   vec3 light = texture2D(s_LightingTexture, lightingUV).rgb;
-
+  vec3 fogcolor = v_fog.rgb;
+       fogcolor = mix(fogcolor,vec3(0.7, 0.7, 0.7),rain);
+       
   diffuse.rgb *= diffuse.rgb*light;
-  diffuse.rgb += 3.0*v_fog.rgb;
+  diffuse.rgb += 3.0*fogcolor;
 
-  diffuse.rgb = colorCorrection(diffuse.rgb);
+float bloomThreshold = 0.6;
+float bloomStrength = 0.2 + (1.2 * snow);
+vec2 texelSize = vec2(1.0/64.0, 1.0/64.0);
 
-  diffuse.a *= lightingUV.y*(1.0-v_fog.a);
+//diffuse.rgb += bloomOptimized(s_WeatherTexture, v_texcoord0, texelSize, bloomThreshold) * bloomStrength;
 
-  gl_FragColor = diffuse;
-}
+// Color correction
+diffuse.rgb = colorCorrection(diffuse.rgb,0.0);
+
+diffuse.a *= lightingUV.y*(1.0-v_fog.a);
+gl_FragColor = vec4(diffuse.rgb, diffuse.a * 0.65);
+  }
 
