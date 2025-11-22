@@ -33,7 +33,7 @@ float fbmn(in vec3 pos, sampler2D iChannel0) {
     float fz = pos.z - pz;      
     vec2 base = pos.xy * INV_NOISERES + pz * Z_STRETCH;      
     float a = texture2D(iChannel0, base).x;      
-    float b = texture2D(iChannel0, base + vec2(Z_STRETCH)).x;      
+    float b = texture2D(iChannel0, base + vec2_splat(Z_STRETCH)).x;      
     return mix(a, b, fz);      
 }      
 
