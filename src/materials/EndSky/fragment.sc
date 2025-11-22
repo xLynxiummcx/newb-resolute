@@ -16,7 +16,7 @@ SAMPLER2D_AUTOREG(s_SkyTexture);
 
 void main() {
 #ifndef INSTANCING
-    vec3 color;
+    vec3 color = vec3_splat(0.0);
     float time = v_posTime.w;
     
     float t = time;
