@@ -1,4 +1,4 @@
-float noisemed(vec3 x) {
+/*float noisemed(vec3 x) {
     vec3 p = floor(x);
     vec3 f = fract(x);
     f = f * f * (3.0 - 2.0 * f);
@@ -124,7 +124,7 @@ LDir = lightDir;
         vec3 samplePos = pos + lightDir * lightDist * fi;
         shadow *= exp(-stormDensity(samplePos, u_time) * 0.35);
     }*/
-
+/*
 
     float cosTheta = dot(viewDir, lightDir);
     float phase = phaseSimple(cosTheta);
@@ -143,3 +143,5 @@ LDir = lightDir;
 #define LIGHT_SAMPLES 1
 #define CLOUD_CENTER_HEIGHT 35.0 
 #define CLOUD_SCALE 25.0 
+
+*/
