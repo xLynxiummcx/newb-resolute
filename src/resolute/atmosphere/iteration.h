@@ -88,12 +88,12 @@ vec4 renderBlackhole(vec3 vdir, float t) {
     accretionDisk = clamp(discColor * disc * 1.5, 0.0, 1.5);
 #endif
 
-    vec3 jetColor = vec3(0.0,0.0,0.0);
-        float yOffset = (i == 0) ? 0.002 : -0.015;
-        float yShape = 1.0 - smoothstep(0.0, 0.02, abs(uvSafe.y - yOffset));
-        float xShape = smoothstep(0.15, 0.02, abs(uvSafe.x) - BLACKHOLE_RADIUS * 1.2);
-        vec3 color = (i == 0) ? vec3(1.2, 0.5,0.0) : vec3(1.0, 0.6, 0.1);
-        jetColor += clamp(color * xShape * yShape * 1.2, 0.0, 1.5);
+vec3 jetColor = vec3(0.0,0.0,0.0);
+float yOffset = 0.002;
+float yShape = 1.0 - smoothstep(0.0, 0.02, abs(uvSafe.y - yOffset));
+float xShape = smoothstep(0.15, 0.02, abs(uvSafe.x) - BLACKHOLE_RADIUS * 1.2);
+vec3 color = vec3(1.2, 0.5, 0.0);
+jetColor = clamp(color * xShape * yShape * 1.2, 0.0, 1.5);
     
     float pulse = 0.85 + 0.15 * sin(t * 3.0);
     sky += blackholeColor + innerHaloColor + accretionDisk;
