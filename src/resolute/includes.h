@@ -16,7 +16,7 @@
 #include "atmosphere/aurora.h"
 #include "atmosphere/lightning.h"
 #include "atmosphere/godrays.h"
-#include "atmosphere/bliss.h"
+//#include "atmosphere/bliss.h"
 #include "atmosphere/iteration.h"
 
 //pbr
