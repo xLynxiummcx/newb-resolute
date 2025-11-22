@@ -60,8 +60,11 @@ float stormDensity(vec3 p, float t) {
 
 
     vec3 texCoord = p * 2.0;
-    texCoord.xz = mat2(cos(r * 0.3), -sin(r * 0.3), 
-                       sin(r * 0.3), cos(r * 0.3)) * p.xz * 2.0;
+   vec2 rotated = mat2(cos(r * 0.3), -sin(r * 0.3), 
+                    sin(r * 0.3), cos(r * 0.3)) * p.xz * 2.0;
+texCoord.x = rotated.x;
+texCoord.z = rotated.y;
+
     texCoord += vec3(t * 0.1, 0.0, 0.0);
     
     float cloudTexture = fbmend(texCoord);
