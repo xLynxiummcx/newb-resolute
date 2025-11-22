@@ -62,7 +62,7 @@ vec3 generateLensFlare(vec2 uv, vec2 flarePosition) {
 
 vec3 colorCorrect(vec3 color, float factor, float factor2) {
     float luminance = color.r + color.g + color.b;
-    return mix(color, vec3(luminance) * factor, luminance * factor2);
+    return mix(color, vec3_splat(luminance) * factor, luminance * factor2);
 }
 
 void main() {
