@@ -197,7 +197,7 @@ if(v_lava>0.9){
    diffuse.rgb*= col * 3.0 * (combined);
  
     }
- //diffuse.rgb *=4.0;
+ diffuse.rgb *=4.0;
 }
 }
 
