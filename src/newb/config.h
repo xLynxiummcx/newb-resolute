@@ -256,8 +256,8 @@
 #endif
 
 #ifdef VIBRANT_HIGH
-#undef WAVE_COUNT 3
-#undef WATER_TYPE 1
+#undef WAVE_COUNT 
+#undef WATER_TYPE 
 
 #define WAVE_COUNT 10
 #define SATURATION
@@ -267,8 +267,8 @@
 #endif
 
 #ifdef LEGACY_HIGH
-#undef WAVE_COUNT 3
-#undef WATER_TYPE 1
+#undef WAVE_COUNT 
+#undef WATER_TYPE 
 
 #define WAVE_COUNT 10
 #define WATER_TYPE 2
@@ -277,8 +277,8 @@
 #endif
 
 #ifdef VIBRANT_ULTRA
-#undef WAVE_COUNT 3
-#undef WATER_TYPE 1
+#undef WAVE_COUNT 
+#undef WATER_TYPE 
 
 #define WAVE_COUNT 10
 #define SATURATION
@@ -288,8 +288,8 @@
 #endif
 
 #ifdef LEGACY_ULTRA
-#undef WAVE_COUNT 3
-#undef WATER_TYPE 1
+#undef WAVE_COUNT 
+#undef WATER_TYPE 
 
 #define WAVE_COUNT 10
 #define WATER_TYPE 2

@@ -42,7 +42,7 @@ vec3 ApplyPuddleEffect(
         vec3 rainSky = vec3_splat(0.7);
         vec3 skyReflect = rainSky * mix(0.5, 1.0, fresnelVal);
 
-        vec4 reflection = vec4(0.0);
+        vec4 reflection = vec4_splat(0.0);
         #if !defined(ALPHA_TEST)
             vec4 ssr = textureCube2x3(s_SSRTex, -viewDir_reflect);
             ssr.rgb = pow(ssr.rgb, vec3(2.0 + 2.0 * night * (1.0 - dawn)));
