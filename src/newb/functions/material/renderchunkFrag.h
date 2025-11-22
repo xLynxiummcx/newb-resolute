@@ -139,7 +139,7 @@ float dither = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.54
     sunColor *=(1.0- shadows)* lm.y;
     vec3 blockLight = lightBlockCol(lm, time,v_color1.g,isCave);
   float finalAO = v_ao;
-vec3 ambient = vec3_splat(0.075) + 
+vec3 ambient = vec3_splat(0.03) + 
                (ambientSky*0.21)*finalAO;
 vec3 shadowTint = mix(vec3(0.9, 0.95, 1.0), vec3(1.0, 1.0, 0.98), finalAO);
 ambient *= shadowTint;
@@ -350,7 +350,7 @@ if (env.end) {
 }
 
 #if defined(ENABLE_CAUSTICS)
-if(doEffect && !isCave){
+if(doEffect ){
 diffuse.rgb = ApplyCaustics(
     diffuse.rgb,
     N,

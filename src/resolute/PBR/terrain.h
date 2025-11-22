@@ -18,12 +18,12 @@ vec3 dodiffuseLight(
     float diffSoft = 0.5 * (NdotL + 1.0); // Remaps from [-1,1] to [0,1]
     vec3 directLight = sunVisibility*diff * lightColor;
     float skyLightSmooth = mix(
-        pow(skyLight, 0.9),
+        pow(skyLight, 0.75),
         pow(skyLight, 0.75),  
         skyLight
     );
     
-    skyLightSmooth = mix(skyLightSmooth,1.0,caves);
+    skyLightSmooth = mix(skyLightSmooth,0.75,caves);
     float ambientOcclusion = skyLightSmooth * 0.8 + 0.75;
     vec3 dynamicAmbient = ambientColor;
     vec3 indirect = dynamicAmbient * ambientOcclusion;

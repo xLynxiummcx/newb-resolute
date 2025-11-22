@@ -75,7 +75,7 @@ vec4 raymarchClouds(vec3 ro, vec3 rd, float maxDist,vec3 sunDir,vec3 skyColor,ve
                 float lightSample = cloudDensity(pos + sunDir * 0.5,iChannel0);      
                 float lighting = mix(0.3, 1.0, 1.0 - lightSample);      
       
-                float ao = mix(0.5, 6.0, 1.0 - density);      
+                float ao = mix(0.7, 2.0, 1.0 - density);      
                 vec3 cloudCol = mix(skyColor,sunColor,lighting )*ao;  
   
                 float scatter = pow(max(0.0, dot(rd, sunDir)), 4.0) * 0.5;      
