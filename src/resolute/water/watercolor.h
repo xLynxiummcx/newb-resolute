@@ -98,7 +98,7 @@ skyColor += sunTex * skySunCol;
 #endif
 
 vec4 ssr = textureCube2x3(s_SSRTex,-viewDir_refl);
-ssr.rgb = pow(ssr.rgb,vec3(2.2));
+ssr.rgb = pow(ssr.rgb,vec3_splat(2.2));
 
 
 #if!defined(WAVY_WATER)
