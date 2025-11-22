@@ -111,7 +111,7 @@ void main() {
   // loading chunks
   relativeDist += RenderChunkFogAlpha.x;
 
-  vec4 fogColor;
+  vec4 fogColor = vec4_splat(0.0);
     vec3 sunDir = normalize(GameSunDir.xyz);
  //sunDir = mix(sunDir,normalize(vec3(-0.5,0.2,0.0)),night * (1.0 - dawn) * (1.0 - dusk));
   
