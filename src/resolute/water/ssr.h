@@ -5,7 +5,7 @@ vec4 textureCube2x3(sampler2D atlas, vec3 dir) {
     float az = abs(n.z);
 
     float m = 0.0;
-    vec2 uv = vec2(0.0);
+    vec2 uv = vec2(0.0,0.0);
     int face = 0;
 
     if (ax >= ay && ax >= az) {
