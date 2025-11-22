@@ -217,7 +217,7 @@
 //#define VANILLAVL
 //#define VORONOI
 #define FAST
-//#define ENABLE_CAUSTICS
+#define ENABLE_CAUSTICS
 #define WAVE_COUNT 3
 #define FOG_HEIGHT 80.0
 //#define VANILLA_SUN

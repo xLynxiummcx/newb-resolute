@@ -52,7 +52,7 @@ vec3 generateLensFlare(vec2 uv, vec2 flarePosition) {
     float flare11 = max(0.01 - pow(length(mixedUV + 0.125 * flarePosition), 1.6), 0.0) * 3.0;
     float flare12 = max(0.01 - pow(length(mixedUV + 0.15 * flarePosition), 1.6), 0.0) * 5.0;
     
-    highp vec3 flareColor = vec3(0.0);
+    highp vec3 flareColor = vec3_splat(0.0);
     flareColor.r += flare1 + flare4 + flare7 + flare10 + centralGlow;
     flareColor.g += flare2 + flare5 + flare8 + flare11 + centralGlow;
     flareColor.b += flare3 + flare6 + flare9 + flare12 + centralGlow;

@@ -3,7 +3,7 @@ version = [0, 0, 0]
 min_supported_mc_version = [1, 21, 20]
 description = '''
 §c%w
-§7- Trying to get best visuals on a Limited Engine , BETA 2
+§7- Trying to get best visuals on a Limited Engine , BETA 3
 %v
 §3https://devendrn.github.io/newb-shader/
 ''' # %w = patch warning, %v = version
