@@ -33,6 +33,6 @@ void main() {
 
     gl_Position = pos;
 #else
-    gl_Position = vec4(0.0);
+    gl_Position = vec4_splat(0.0);
 #endif
 }
