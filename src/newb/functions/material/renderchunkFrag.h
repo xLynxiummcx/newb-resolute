@@ -59,7 +59,7 @@ vec3 rawTorch = dVx * dFdx(lmTorchIn) + dVy * dFdy(lmTorchIn);
 vec3 rawSky   = dVx * dFdx(lmSkyIn)   + dVy * dFdy(lmSkyIn);
 
 const vec3 fallbackSky   = vec3(0.0, 1.0, 0.0);
-vec3 fallbackTorch = normalize(tbn * vec3(0.0, 0.0, 1.0));
+vec3 fallbackTorch = normalize(mul(tbn,vec3(0.0, 0.0, 1.0)));
 
 vec3 LT = normalize(mix(fallbackTorch, rawTorch, hasTorch));
 vec3 LS = normalize(mix(fallbackSky,   rawSky,   hasSky));
