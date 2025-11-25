@@ -159,7 +159,9 @@ void main() {
     vec3 aurora = GetAurora(viewDir, time, dither,s_NoiseVoxel);  
       aurora = pow(aurora,vec3_splat(2.2));
   
-    skyColor += ((aurora * night) * (1.0 - dawn)) * smoothstep(0.1, 1.0, viewDir.y);     
+    skyColor += ((aurora * night) * (1.0 - dawn)) * smoothstep(0.1, 1.0, viewDir.y);    
+    
+    #if defined(ENABLE_CLOUD)
 #if defined(VOLUMETRIC_CLOUDS)
 vec4 clouds = raymarchClouds(vec3(0.0,2.0,time*0.05), viewDir, 800.0,sunDir,skyColor, absorption,s_CloudNoise);    
 skyColor = mix(skyColor,clouds.rgb,clouds.a);     
@@ -206,6 +208,7 @@ skyColor = mix(skyColor,absorption, clouds2);
 #if defined(FAST_CLOUDS)
 vec4  clouds = fastclouds(viewDir, time, sunDir, skyColor, absorption, rain);
 skyColor = mix(skyColor,  clouds.rgb, clouds.a);
+#endif
 #endif
 
      #if defined(SHOW_LIGHTNING)   
