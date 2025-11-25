@@ -112,10 +112,10 @@ if (env.nether) {
     ambientSky = vec3(0.71, 0.23, 0.00) * 1.2;
 
 } else if (env.end) {
-    zenithsky = vec3(0.01);
+    zenithsky = vec3_splat(0.01);
     sunColor  = vec3_splat(1.0);
-    storeSky  = vec3(0.0);
-    ambientSky = vec3(0.2);
+    storeSky  = vec3_splat(0.0);
+    ambientSky = vec3_splat(0.2);
 }
 
 
